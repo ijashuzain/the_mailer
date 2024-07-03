@@ -1,7 +1,7 @@
 name: the_mailer
-description: "A new Flutter package project."
-version: 0.0.1
-homepage:
+description: A Flutter plugin for sending emails using the device's default email app. Supports multiple recipients, CC, BCC, and file attachments on both Android and iOS platforms
+version: 1.0.0
+repository: https://github.com/ijashuzain/the_mailer
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
