@@ -9,9 +9,10 @@ A Flutter plugin for sending emails using the device’s default email app. This
 
 ### Getting Started
 To use this plugin, add the_mailer as a dependency in your pubspec.yaml file:
-dart ```
+```dart
 dependencies:
- the_mailer: ^0.0.1```
+ the_mailer: ^0.0.1
+ ```
 
 ## Usage
 Import the package in your Dart code:
