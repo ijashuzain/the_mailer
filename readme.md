@@ -39,10 +39,12 @@ print('Failed to send email');
 
 ## Additional Information
 ### Android Setup
-No additional setup is required for Android.
+- The plugin uses Intent.ACTION_SEND_MULTIPLE to handle multiple attachments.
+- File provider authority is set up automatically.
 
 ### iOS Setup
-No additional setup is required for iOS.
+- Uses MFMailComposeViewController to compose emails.
+- Attachment MIME types are automatically detected.
 
 ## Limitations
 This plugin opens the default email app on the device. It does not send emails directly from your app.
