@@ -1,3 +1,5 @@
-## 0.0.1
+## 1.0.0
 
-* TODO: Describe initial release.
+* Initial release.
+* Implemented email sending functionality for Android and iOS.
+* Support for multiple recipients, CC, BCC, and file attachments.
