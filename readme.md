@@ -22,7 +22,7 @@ import 'package:the_mailer/the_mailer.dart';
 
 To send an email:
 ```dart
-bool success = await TheMailer.sendMail(
+bool success = await TheMailer.send(
 to: ['recipient@example.com'],
 cc: ['cc@example.com'],
 bcc: ['bcc@example.com'],
