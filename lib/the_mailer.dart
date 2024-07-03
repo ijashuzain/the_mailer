@@ -1,33 +1,20 @@
 library the_mailer;
 
-import 'dart:developer';
+import 'the_mailer_platform_interface.dart';
 
-import 'package:flutter/services.dart';
+class MailSender {
+  Future<String?> getPlatformVersion() {
+    return TheMailerPlatform.instance.getPlatformVersion();
+  }
 
-class TheMailer {
-  static const MethodChannel _channel = MethodChannel('the_mailer');
-
-  static Future<bool> send({
-    required List<String> to,
-    List<String> cc = const [],
-    List<String> bcc = const [],
+  Future<void> send({
+    required List<String> recipient,
     required String subject,
     required String body,
-    List<String> attachmentPaths = const [],
-  }) async {
-    try {
-      final bool result = await _channel.invokeMethod('sendMail', {
-        'to': to,
-        'cc': cc,
-        'bcc': bcc,
-        'subject': subject,
-        'body': body,
-        'attachments': attachmentPaths,
-      });
-      return result;
-    } on PlatformException catch (e) {
-      log("Failed to send email: '${e.message}'.");
-      return false;
-    }
+    String? attachment,
+    List<String>? cc,
+    List<String>? bcc,
+  }) {
+    return TheMailerPlatform.instance.sendMail(recipient, subject, body, attachment, cc, bcc);
   }
 }

@@ -4,55 +4,89 @@ import MessageUI
 
 public class TheMailerPlugin: NSObject, FlutterPlugin, MFMailComposeViewControllerDelegate {
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let channel = FlutterMethodChannel(name: "the_mailer", binaryMessenger: registrar.messenger())
-        let instance = TheMailerPlugin()
+        let channel = FlutterMethodChannel(name: "mail_sender", binaryMessenger: registrar.messenger())
+        let instance = MailSenderPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        if call.method == "sendMail" {
-            guard let args = call.arguments as? [String: Any],
-                  let to = args["to"] as? [String],
-                  let cc = args["cc"] as? [String],
-                  let bcc = args["bcc"] as? [String],
-                  let subject = args["subject"] as? String,
-                  let body = args["body"] as? String,
-                  let attachmentPaths = args["attachmentPaths"] as? [String] else {
+        switch call.method {
+        case "getPlatformVersion":
+            result("iOS " + UIDevice.current.systemVersion)
+        case "sendMail":
+
+            guard let arguments = call.arguments as? [String: Any],
+                  let emailAddress = arguments["emailAddress"] as? [String] ,
+                  let subject = arguments["subject"] as? String,
+                  let cc = arguments["cc"] as? [String],
+                  let bcc = arguments["bcc"] as? [String],
+                  let body = arguments["body"] as? String else {
                 result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
                 return
             }
-
-            if MFMailComposeViewController.canSendMail() {
-                let mail = MFMailComposeViewController()
-                mail.mailComposeDelegate = self
-                mail.setToRecipients(to)
-                mail.setCcRecipients(cc)
-                mail.setBccRecipients(bcc)
-                mail.setSubject(subject)
-                mail.setMessageBody(body, isHTML: false)
-
-                for path in attachmentPaths {
-                    if let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
-                        let filename = (path as NSString).lastPathComponent
-                        mail.addAttachmentData(data, mimeType: "application/octet-stream", fileName: filename)
-                    }
-                }
-
-                if let rootViewController = UIApplication.shared.windows.first?.rootViewController {
-                    rootViewController.present(mail, animated: true, completion: nil)
-                    result(true)
-                } else {
-                    result(FlutterError(code: "NO_ROOT_VIEW_CONTROLLER", message: "Unable to present mail composer", details: nil))
-                }
-            } else {
-                result(FlutterError(code: "MAIL_NOT_AVAILABLE", message: "Mail services are not available", details: nil))
+            var attachmentPath: String? = nil
+            if let possibleAttachmentPath = arguments["attachment"] as? String {
+                attachmentPath = possibleAttachmentPath
             }
-        } else {
+
+
+            sendMail(emailAddress: emailAddress, subject: subject,body: body, attachmentPath: attachmentPath, cc:cc, bcc:bcc, result: result)
+        default:
             result(FlutterMethodNotImplemented)
         }
     }
 
-    public func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
-        controller.dismiss(animated: true, completion: nil)
+    private func sendMail(
+        emailAddress: [String],
+        subject: String,
+        body: String,
+        attachmentPath: String?,
+        cc: [String]?,
+        bcc: [String]?,
+        result: @escaping FlutterResult
+    ) {
+        guard MFMailComposeViewController.canSendMail() else {
+            result(FlutterError(code: "CANNOT_SEND_MAIL",
+                                message: "Mail is not configured on this device",
+                                details: nil))
+            return
+        }
+        let mailComposer = MFMailComposeViewController()
+        mailComposer.setToRecipients(emailAddress)
+        mailComposer.setSubject(subject)
+        mailComposer.setMessageBody(body, isHTML: false)
+
+        if let cc = cc, !cc.isEmpty{
+            mailComposer.setCcRecipients(cc)
+        }
+
+        if let bcc = bcc, !bcc.isEmpty{
+            mailComposer.setBccRecipients(bcc)
+        }
+
+        if let filePath = attachmentPath {
+            let attachmentURL = URL(fileURLWithPath: filePath)
+            if let data = NSData(contentsOfFile: filePath) {
+                mailComposer.addAttachmentData(
+                    data as Data,
+                    mimeType: "application/pdf",
+                    fileName: attachmentURL.lastPathComponent
+                )
+            }
+        }
+
+        mailComposer.mailComposeDelegate = self
+        UIApplication.shared.keyWindow?.rootViewController?.present(
+            mailComposer,
+            animated: true,
+            completion: nil
+        )
+    }
+
+    public func mailComposeController(
+        _ controller: MFMailComposeViewController,
+        didFinishWith result: MFMailComposeResult,
+        error: Error?) {
+            controller.dismiss(animated: true, completion: nil)
     }
 }
